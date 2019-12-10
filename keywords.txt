@@ -1,0 +1,13 @@
+# Syntax Coloring Map For DMX Library
+
+# Datatypes (KEYWORD1)
+DMX			KEYWORD1
+
+# Methods and Functions (KEYWORD2)
+Initialize	KEYWORD2
+Read		KEYWORD2
+IsHealthy	KEYWORD2
+
+# Instances (KEYWORD2)
+
+# Constants (LITERAL1)
