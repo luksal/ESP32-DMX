@@ -15,7 +15,7 @@ void loop()
 
     Serial.print(readcycle);
       
-    if(DMX_healthy())
+    if(DMX::IsHealthy())
     {
       Serial.print(": ok - ");
     }
@@ -23,10 +23,10 @@ void loop()
     {
       Serial.print(": fail - ");
     }
-    Serial.print(DMX_read(1));
+    Serial.print(DMX::Read(1));
     Serial.print(" - ");
-    Serial.print(DMX_read(110));
+    Serial.print(DMX::Read(110));
     Serial.print(" - ");
-    Serial.println(DMX_read(256));
+    Serial.println(DMX::Read(256));
   }
 }
