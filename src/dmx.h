@@ -1,8 +1,6 @@
 #ifndef DMX_h
 #define DMX_h
 
-#include "Arduino.h"
-
 class DMX
 {
     public:
@@ -10,7 +8,7 @@ class DMX
 
         static uint8_t Read(uint16_t channel);              // returns the dmx value for the givven address (values from 1 to 512)
 
-        static bool IsHealthy();                            // returns true, when a valid DMX signal was received within the last 500ms
+        static uint8_t IsHealthy();                            // returns true, when a valid DMX signal was received within the last 500ms
 
     private:
         DMX();                                              // hide constructor
