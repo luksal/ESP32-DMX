@@ -78,7 +78,7 @@ uint8_t DMX::Read(uint16_t channel)
     return tmp_dmx;
 }
 
-bool DMX::IsHealthy()
+uint8_t DMX::IsHealthy()
 {
     // get timestamp of last received packet
     xSemaphoreTake(sync_dmx, portMAX_DELAY);
@@ -87,9 +87,9 @@ bool DMX::IsHealthy()
     // check if elapsed time < defined timeout
     if(millis() - dmx_timeout < HEALTHY_TIME)
     {
-        return true;
+        return 1;
     }
-    return false;
+    return 0;
 }
 
 void DMX::uart_event_task(void *pvParameters)
@@ -154,7 +154,4 @@ void DMX::uart_event_task(void *pvParameters)
             }
         }
     }
-    free(dtmp);
-    dtmp = NULL;
-    vTaskDelete(NULL);
 }
