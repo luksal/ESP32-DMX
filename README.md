@@ -6,4 +6,4 @@ Can be used with Arduino or ESP-IDF.
 
 Driver inputs DMX using UART2 on GPIO pin 16. Feel free to experiment with other UARTs and Pins.
 
-Library for ArduinoIDE is comming soon.
+Even if it is an Arduino library, it is possible to use the two source files in IDF projects since it has no dependency on Arduino libraries.
