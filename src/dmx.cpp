@@ -105,52 +105,64 @@ void DMX::uart_event_task(void *pvParameters)
             switch(event.type)
             {
                 case UART_DATA:
-                // read the received data
-                uart_read_bytes(DMX_UART_NUM, dtmp, event.size, portMAX_DELAY);
-                // check if break detected
-                if(dmx_state == DMX_BREAK)
-                {
-                    // if not 0, then RDM or custom protocol
-                    if(dtmp[0] == 0)
+                    // read the received data
+                    uart_read_bytes(DMX_UART_NUM, dtmp, event.size, portMAX_DELAY);
+                    // check if break detected
+                    if(dmx_state == DMX_BREAK)
                     {
-                    dmx_state = DMX_DATA;
-                    // reset dmx adress to 0
-                    current_rx_addr = 0;
-                    xSemaphoreTake(sync_dmx, portMAX_DELAY);
-                    // store received timestamp
-                    last_dmx_packet = millis();
-                    xSemaphoreGive(sync_dmx);
+                        // if not 0, then RDM or custom protocol
+                        if(dtmp[0] == 0)
+                        {
+                        dmx_state = DMX_DATA;
+                        // reset dmx adress to 0
+                        current_rx_addr = 0;
+                        xSemaphoreTake(sync_dmx, portMAX_DELAY);
+                        // store received timestamp
+                        last_dmx_packet = millis();
+                        xSemaphoreGive(sync_dmx);
+                        }
                     }
-                }
-                // check if in data receive mode
-                if(dmx_state == DMX_DATA)
-                {
-                    xSemaphoreTake(sync_dmx, portMAX_DELAY);
-                    // copy received bytes to dmx data array
-                    for(int i = 0; i < event.size; i++)
+                    // check if in data receive mode
+                    if(dmx_state == DMX_DATA)
                     {
-                    dmx_data[current_rx_addr++] = dtmp[i];
+                        xSemaphoreTake(sync_dmx, portMAX_DELAY);
+                        // copy received bytes to dmx data array
+                        for(int i = 0; i < event.size; i++)
+                        {
+                        dmx_data[current_rx_addr++] = dtmp[i];
+                        }
+                        xSemaphoreGive(sync_dmx);
                     }
-                    xSemaphoreGive(sync_dmx);
-                }
-                break;
+                    break;
                 case UART_BREAK:
-                // break detected, clear queue und flush received bytes
-                // results in missing the last few bytes... needs fix
-                uart_flush_input(DMX_UART_NUM);
-                xQueueReset(dmx_rx_queue);
-                dmx_state = DMX_BREAK;
-                break;
+                    // break detected
+                    // check if there are bytes left in the queue
+                    if(dmx_state == DMX_DATA && event.size > 0 && current_rx_addr > 0)
+                    {
+                        uart_read_bytes(DMX_UART_NUM, dtmp, event.size, portMAX_DELAY);
+                        xSemaphoreTake(sync_dmx, portMAX_DELAY);
+                        // copy received bytes to dmx data array
+                        for(int i = 0; i < event.size; i++)
+                        {
+                            dmx_data[current_rx_addr++] = dtmp[i];
+                        }
+                        xSemaphoreGive(sync_dmx);
+                    }
+                    // clear queue und flush received bytes                    
+                    uart_flush_input(DMX_UART_NUM);
+                    xQueueReset(dmx_rx_queue);
+                    dmx_state = DMX_BREAK;
+                    break;
                 case UART_FRAME_ERR:
                 case UART_PARITY_ERR:
                 case UART_BUFFER_FULL:
                 case UART_FIFO_OVF:
                 default:
-                // error recevied, going to idle mode
-                uart_flush_input(DMX_UART_NUM);
-                xQueueReset(dmx_rx_queue);
-                dmx_state = DMX_IDLE;
-                break;
+                    // error recevied, going to idle mode
+                    uart_flush_input(DMX_UART_NUM);
+                    xQueueReset(dmx_rx_queue);
+                    dmx_state = DMX_IDLE;
+                    break;
             }
         }
     }
