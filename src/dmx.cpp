@@ -85,7 +85,7 @@ uint8_t DMX::IsHealthy()
     long dmx_timeout = last_dmx_packet;
     xSemaphoreGive(sync_dmx);
     // check if elapsed time < defined timeout
-    if(millis() - dmx_timeout < HEALTHY_TIME)
+    if(xTaskGetTickCount() - dmx_timeout < HEALTHY_TIME)
     {
         return 1;
     }
@@ -118,7 +118,7 @@ void DMX::uart_event_task(void *pvParameters)
                         current_rx_addr = 0;
                         xSemaphoreTake(sync_dmx, portMAX_DELAY);
                         // store received timestamp
-                        last_dmx_packet = millis();
+                        last_dmx_packet = xTaskGetTickCount();
                         xSemaphoreGive(sync_dmx);
                         }
                     }
