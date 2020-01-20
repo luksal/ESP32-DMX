@@ -136,18 +136,6 @@ void DMX::uart_event_task(void *pvParameters)
                     break;
                 case UART_BREAK:
                     // break detected
-                    // check if there are bytes left in the queue
-                    if(dmx_state == DMX_DATA && event.size > 0 && current_rx_addr > 0)
-                    {
-                        uart_read_bytes(DMX_UART_NUM, dtmp, event.size, portMAX_DELAY);
-                        xSemaphoreTake(sync_dmx, portMAX_DELAY);
-                        // copy received bytes to dmx data array
-                        for(int i = 0; i < event.size; i++)
-                        {
-                            dmx_data[current_rx_addr++] = dtmp[i];
-                        }
-                        xSemaphoreGive(sync_dmx);
-                    }
                     // clear queue und flush received bytes                    
                     uart_flush_input(DMX_UART_NUM);
                     xQueueReset(dmx_rx_queue);
