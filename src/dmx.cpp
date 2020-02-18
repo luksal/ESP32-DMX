@@ -129,7 +129,10 @@ void DMX::uart_event_task(void *pvParameters)
                         // copy received bytes to dmx data array
                         for(int i = 0; i < event.size; i++)
                         {
-                        dmx_data[current_rx_addr++] = dtmp[i];
+                            if(current_rx_addr < 513)
+                            {
+                                dmx_data[current_rx_addr++] = dtmp[i];
+                            }
                         }
                         xSemaphoreGive(sync_dmx);
                     }
