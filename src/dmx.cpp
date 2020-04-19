@@ -1,8 +1,4 @@
 #include <dmx.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
-#include "driver/uart.h"
 
 #define DMX_SERIAL_INPUT_PIN    16          // pin for dmx rx
 #define DMX_SERIAL_OUTPUT_PIN   17          // pin for dmx tx
