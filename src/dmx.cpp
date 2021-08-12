@@ -29,6 +29,8 @@
 
 #define DMX_CORE                1           // select the core the rx/tx thread should run on
 
+#define DMX_IGNORE_THREADSAFETY 0           // set to 1 to disable all threadsafe mechanisms
+
 QueueHandle_t DMX::dmx_rx_queue;
 
 SemaphoreHandle_t DMX::sync_dmx;
@@ -99,10 +101,15 @@ uint8_t DMX::Read(uint16_t channel)
     {
         return 0;
     }
+
     // take data threadsafe from array and return
+#ifndef DMX_IGNORE_THREADSAFETY
     xSemaphoreTake(sync_dmx, portMAX_DELAY);
+#endif
     uint8_t tmp_dmx = dmx_data[channel];
+#ifndef DMX_IGNORE_THREADSAFETY
     xSemaphoreGive(sync_dmx);
+#endif
     return tmp_dmx;
 }
 
@@ -113,9 +120,13 @@ void DMX::ReadAll(uint8_t * data, uint16_t start, size_t size)
     {
         return;
     }
+#ifndef DMX_IGNORE_THREADSAFETY
     xSemaphoreTake(sync_dmx, portMAX_DELAY);
+#endif
     memcpy(data, (uint8_t *)dmx_data + start, size);
+#ifndef DMX_IGNORE_THREADSAFETY
     xSemaphoreGive(sync_dmx);
+#endif
 }
 
 void DMX::Write(uint16_t channel, uint8_t value)
@@ -125,9 +136,14 @@ void DMX::Write(uint16_t channel, uint8_t value)
     {
         return;
     }
+
+#ifndef DMX_IGNORE_THREADSAFETY
     xSemaphoreTake(sync_dmx, portMAX_DELAY);
+#endif
     dmx_data[channel] = value;
+#ifndef DMX_IGNORE_THREADSAFETY
     xSemaphoreGive(sync_dmx);
+#endif
 }
 
 void DMX::WriteAll(uint8_t * data, uint16_t start, size_t size)
@@ -137,17 +153,25 @@ void DMX::WriteAll(uint8_t * data, uint16_t start, size_t size)
     {
         return;
     }
+#ifndef DMX_IGNORE_THREADSAFETY
     xSemaphoreTake(sync_dmx, portMAX_DELAY);
+#endif
     memcpy((uint8_t *)dmx_data + start, data, size);
+#ifndef DMX_IGNORE_THREADSAFETY
     xSemaphoreGive(sync_dmx);
+#endif
 }
 
 uint8_t DMX::IsHealthy()
 {
     // get timestamp of last received packet
+#ifndef DMX_IGNORE_THREADSAFETY
     xSemaphoreTake(sync_dmx, portMAX_DELAY);
+#endif
     long dmx_timeout = last_dmx_packet;
+#ifndef DMX_IGNORE_THREADSAFETY
     xSemaphoreGive(sync_dmx);
+#endif
     // check if elapsed time < defined timeout
     if(xTaskGetTickCount() - dmx_timeout < HEALTHY_TIME)
     {
@@ -173,10 +197,14 @@ void DMX::uart_send_task(void*pvParameters)
         ets_delay_us(24);
         // write start code
         uart_write_bytes(DMX_UART_NUM, (const char*) &start_code, 1);
+#ifndef DMX_IGNORE_THREADSAFETY
         xSemaphoreTake(sync_dmx, portMAX_DELAY);
+#endif
         // transmit the dmx data
         uart_write_bytes(DMX_UART_NUM, (const char*) dmx_data+1, 512);
+#ifndef DMX_IGNORE_THREADSAFETY
         xSemaphoreGive(sync_dmx);
+#endif
     }
 }
 
@@ -204,16 +232,22 @@ void DMX::uart_event_task(void *pvParameters)
                         dmx_state = DMX_DATA;
                         // reset dmx adress to 0
                         current_rx_addr = 0;
+#ifndef DMX_IGNORE_THREADSAFETY
                         xSemaphoreTake(sync_dmx, portMAX_DELAY);
+#endif
                         // store received timestamp
                         last_dmx_packet = xTaskGetTickCount();
+#ifndef DMX_IGNORE_THREADSAFETY
                         xSemaphoreGive(sync_dmx);
+#endif
                         }
                     }
                     // check if in data receive mode
                     if(dmx_state == DMX_DATA)
                     {
+#ifndef DMX_IGNORE_THREADSAFETY
                         xSemaphoreTake(sync_dmx, portMAX_DELAY);
+#endif
                         // copy received bytes to dmx data array
                         for(int i = 0; i < event.size; i++)
                         {
@@ -222,7 +256,9 @@ void DMX::uart_event_task(void *pvParameters)
                                 dmx_data[current_rx_addr++] = dtmp[i];
                             }
                         }
+#ifndef DMX_IGNORE_THREADSAFETY
                         xSemaphoreGive(sync_dmx);
+#endif
                     }
                     break;
                 case UART_BREAK:
