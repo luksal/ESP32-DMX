@@ -25,6 +25,8 @@
 #ifndef DMX_h
 #define DMX_h
 
+enum DMXState { DMX_IDLE, DMX_BREAK, DMX_DATA, DMX_OUTPUT };
+
 class DMX
 {
     public:
@@ -41,7 +43,7 @@ class DMX
         
         static SemaphoreHandle_t sync_dmx;                  // semaphore for syncronising access to dmx array
 
-        static uint8_t dmx_state;                           // status, in which recevied state we are
+        static DMXState dmx_state;                           // status, in which recevied state we are
 
         static uint16_t current_rx_addr;                    // last received dmx channel
 

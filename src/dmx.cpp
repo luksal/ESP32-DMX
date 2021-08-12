@@ -27,16 +27,13 @@
 
 #define BUF_SIZE                1024        //  buffer size for rx events
 
-#define DMX_IDLE                    0
-#define DMX_BREAK                   1
-#define DMX_DATA                    2
 #define DMX_CORE                1           // select the core the rx/tx thread should run on
 
 QueueHandle_t DMX::dmx_rx_queue;
 
 SemaphoreHandle_t DMX::sync_dmx;
 
-uint8_t DMX::dmx_state = DMX_IDLE;
+DMXState DMX::dmx_state = DMX_IDLE;
 
 uint16_t DMX::current_rx_addr = 0;
 
