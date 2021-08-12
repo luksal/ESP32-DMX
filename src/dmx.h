@@ -36,10 +36,14 @@ class DMX
 
         static uint8_t Read(uint16_t channel);              // returns the dmx value for the givven address (values from 1 to 512)
 
-        static uint8_t IsHealthy();                            // returns true, when a valid DMX signal was received within the last 500ms
+        static void ReadAll(uint8_t * data, uint16_t start, size_t size);   // copies the defined channels from the read buffer
 
         static void Write(uint16_t channel, uint8_t value); // writes the dmx value to the buffer
+        
+        static void WriteAll(uint8_t * data, uint16_t start, size_t size);  // copies the defined channels into the write buffer
 
+        static uint8_t IsHealthy();                            // returns true, when a valid DMX signal was received within the last 500ms
+        
     private:
         DMX();                                              // hide constructor
 

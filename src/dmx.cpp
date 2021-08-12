@@ -106,6 +106,18 @@ uint8_t DMX::Read(uint16_t channel)
     return tmp_dmx;
 }
 
+void DMX::ReadAll(uint8_t * data, uint16_t start, size_t size)
+{
+    // restrict acces to dmx array to valid values
+    if(start < 1 || start > 512 || start + size > 513)
+    {
+        return;
+    }
+    xSemaphoreTake(sync_dmx, portMAX_DELAY);
+    memcpy(data, (uint8_t *)dmx_data + start, size);
+    xSemaphoreGive(sync_dmx);
+}
+
 void DMX::Write(uint16_t channel, uint8_t value)
 {
     // restrict acces to dmx array to valid values
@@ -117,6 +129,19 @@ void DMX::Write(uint16_t channel, uint8_t value)
     dmx_data[channel] = value;
     xSemaphoreGive(sync_dmx);
 }
+
+void DMX::WriteAll(uint8_t * data, uint16_t start, size_t size)
+{
+    // restrict acces to dmx array to valid values
+    if(start < 1 || start > 512 || start + size > 513)
+    {
+        return;
+    }
+    xSemaphoreTake(sync_dmx, portMAX_DELAY);
+    memcpy((uint8_t *)dmx_data + start, data, size);
+    xSemaphoreGive(sync_dmx);
+}
+
 uint8_t DMX::IsHealthy()
 {
     // get timestamp of last received packet
