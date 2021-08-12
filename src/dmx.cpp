@@ -95,13 +95,9 @@ void DMX::Initialize(DMXDirection direction)
 uint8_t DMX::Read(uint16_t channel)
 {
     // restrict acces to dmx array to valid values
-    if(channel < 1)
+    if(channel < 1 || channel > 512)
     {
-        channel = 1;
-    }
-    else if(channel > 512)
-    {
-        channel = 512;
+        return 0;
     }
     // take data threadsafe from array and return
     xSemaphoreTake(sync_dmx, portMAX_DELAY);
