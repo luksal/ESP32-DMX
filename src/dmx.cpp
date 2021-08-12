@@ -1,4 +1,3 @@
-#include <dmx.h>
 /* 
  * This file is part of the ESP32-DMX distribution (https://github.com/luksal/ESP32-DMX).
  * Copyright (c) 2021 Lukas Salomon.
@@ -16,8 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define DMX_SERIAL_INPUT_PIN    16          // pin for dmx rx
-#define DMX_SERIAL_OUTPUT_PIN   17          // pin for dmx tx
+#include <DMX.h>
+
+#define DMX_SERIAL_INPUT_PIN    GPIO_NUM_16 // pin for dmx rx
+#define DMX_SERIAL_OUTPUT_PIN   GPIO_NUM_17 // pin for dmx tx
+#define DMX_SERIAL_IO_PIN       GPIO_NUM_4  // pin for dmx rx/tx change
+
 #define DMX_UART_NUM            UART_NUM_2  // dmx uart
 
 #define HEALTHY_TIME            500         // timeout in ms 
@@ -27,6 +30,7 @@
 #define DMX_IDLE                    0
 #define DMX_BREAK                   1
 #define DMX_DATA                    2
+#define DMX_CORE                1           // select the core the rx/tx thread should run on
 
 QueueHandle_t DMX::dmx_rx_queue;
 
@@ -65,11 +69,17 @@ void DMX::Initialize()
     // install queue
     uart_driver_install(DMX_UART_NUM, BUF_SIZE * 2, BUF_SIZE * 2, 20, &dmx_rx_queue, 0);
 
-    // create receive task
-    xTaskCreate(uart_event_task, "uart_event_task", 2048, NULL, 12, NULL);
-
     // create mutex for syncronisation
     sync_dmx = xSemaphoreCreateMutex();
+
+    // set gpio for direction
+    gpio_pad_select_gpio(DMX_SERIAL_IO_PIN);
+    gpio_set_direction(DMX_SERIAL_IO_PIN, GPIO_MODE_OUTPUT);
+        gpio_set_level(DMX_SERIAL_IO_PIN, 0);
+        dmx_state = DMX_IDLE;
+
+        // create receive task
+        xTaskCreatePinnedToCore(DMX::uart_event_task, "uart_event_task", 2048, NULL, 1, NULL, DMX_CORE);
 }
 
 uint8_t DMX::Read(uint16_t channel)
