@@ -38,6 +38,8 @@ class DMX
 
         static uint8_t IsHealthy();                            // returns true, when a valid DMX signal was received within the last 500ms
 
+        static void Write(uint16_t channel, uint8_t value); // writes the dmx value to the buffer
+
     private:
         DMX();                                              // hide constructor
 

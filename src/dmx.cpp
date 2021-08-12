@@ -106,6 +106,17 @@ uint8_t DMX::Read(uint16_t channel)
     return tmp_dmx;
 }
 
+void DMX::Write(uint16_t channel, uint8_t value)
+{
+    // restrict acces to dmx array to valid values
+    if(channel < 1 || channel > 512)
+    {
+        return;
+    }
+    xSemaphoreTake(sync_dmx, portMAX_DELAY);
+    dmx_data[channel] = value;
+    xSemaphoreGive(sync_dmx);
+}
 uint8_t DMX::IsHealthy()
 {
     // get timestamp of last received packet
