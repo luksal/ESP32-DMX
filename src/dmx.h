@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License 
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <stdint.h>
 #include <string.h>
 
@@ -25,12 +26,13 @@
 #ifndef DMX_h
 #define DMX_h
 
+enum DMXDirection { input, output };
 enum DMXState { DMX_IDLE, DMX_BREAK, DMX_DATA, DMX_OUTPUT };
 
 class DMX
 {
     public:
-        static void Initialize();                           // initialize library
+        static void Initialize(DMXDirection direction);     // initialize library
 
         static uint8_t Read(uint16_t channel);              // returns the dmx value for the givven address (values from 1 to 512)
 
@@ -51,8 +53,9 @@ class DMX
 
         static uint8_t dmx_data[513];                       // stores the received dmx data
 
-        static void uart_event_task(void *pvParameters);    // Event task
+        static void uart_event_task(void *pvParameters);    // event task
 
+        static void uart_send_task(void*pvParameters);      // transmit task
 };
 
 #endif

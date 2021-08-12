@@ -46,7 +46,7 @@ DMX::DMX()
 
 }
 
-void DMX::Initialize()
+void DMX::Initialize(DMXDirection direction)
 {
     // configure UART for DMX
     uart_config_t uart_config =
@@ -72,11 +72,24 @@ void DMX::Initialize()
     // set gpio for direction
     gpio_pad_select_gpio(DMX_SERIAL_IO_PIN);
     gpio_set_direction(DMX_SERIAL_IO_PIN, GPIO_MODE_OUTPUT);
+
+    // depending on parameter set gpio for direction change and start rx or tx thread
+    if(direction == output)
+    {
+        gpio_set_level(DMX_SERIAL_IO_PIN, 1);
+        dmx_state = DMX_OUTPUT;
+        
+        // create send task
+        xTaskCreatePinnedToCore(DMX::uart_send_task, "uart_send_task", 1024, NULL, 1, NULL, DMX_CORE);
+    }
+    else
+    {    
         gpio_set_level(DMX_SERIAL_IO_PIN, 0);
         dmx_state = DMX_IDLE;
 
         // create receive task
         xTaskCreatePinnedToCore(DMX::uart_event_task, "uart_event_task", 2048, NULL, 1, NULL, DMX_CORE);
+    }
 }
 
 uint8_t DMX::Read(uint16_t channel)
@@ -109,6 +122,30 @@ uint8_t DMX::IsHealthy()
         return 1;
     }
     return 0;
+}
+
+void DMX::uart_send_task(void*pvParameters)
+{
+    uint8_t start_code = 0x00;
+    for(;;)
+    {
+        // wait till uart is ready
+        uart_wait_tx_done(DMX_UART_NUM, 1000);
+        // set line to inverse, creates break signal
+        uart_set_line_inverse(DMX_UART_NUM, UART_INVERSE_TXD);
+        // wait break time
+        ets_delay_us(184);
+        // disable break signal
+        uart_set_line_inverse(DMX_UART_NUM,  0);
+        // wait mark after break
+        ets_delay_us(24);
+        // write start code
+        uart_write_bytes(DMX_UART_NUM, (const char*) &start_code, 1);
+        xSemaphoreTake(sync_dmx, portMAX_DELAY);
+        // transmit the dmx data
+        uart_write_bytes(DMX_UART_NUM, (const char*) dmx_data+1, 512);
+        xSemaphoreGive(sync_dmx);
+    }
 }
 
 void DMX::uart_event_task(void *pvParameters)
