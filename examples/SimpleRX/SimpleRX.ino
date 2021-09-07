@@ -4,7 +4,7 @@ int readcycle = 0;
 
 void setup() {
   Serial.begin(115200);
-  DMX::Initialize();
+  DMX::Initialize(input);
 }
 
 void loop()
