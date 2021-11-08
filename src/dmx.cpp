@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <DMX.h>
+#include <dmx.h>
 
 #define DMX_SERIAL_INPUT_PIN    GPIO_NUM_16 // pin for dmx rx
 #define DMX_SERIAL_OUTPUT_PIN   GPIO_NUM_17 // pin for dmx tx
